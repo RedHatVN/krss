@@ -3,7 +3,7 @@ define('APP_DIR', dirname(__FILE__) . DIRECTORY_SEPARATOR);
 define('CACHE_DIR', APP_DIR . '/cache');
 define('CACHE_DURATION', 7200);
 require_once(APP_DIR . '/libs/phpfastcache/phpfastcache.php');
-
+$url = 'http://afamily.vn/chuyen-la/sen-khong-lo-an-thit-xam-nhap-nuoc-anh-20140905031048188.chn';
 $cache_config = array(
     'storage' => 'files',
     'path' => CACHE_DIR,
@@ -21,7 +21,7 @@ $cache = phpFastCache();
 
 $hash = md5($url);
 $file = CACHE_DIR . '/' . $hash . '.cache';
-$post = $cache->get($hash);
+$post = $cache->$hash;
 if ($post == null) {
     $ch = curl_init($url);
     $curl_defaults = array(
@@ -38,10 +38,10 @@ if ($post == null) {
         CURLOPT_SSL_VERIFYPEER => 0,
     );
     curl_setopt_array($ch, $curl_defaults);
-    $data = curl_exec($ch);
-    $posts = file_put_contents($file, $data);
+    $post = curl_exec($ch);
+//    $posts = file_put_contents($file, $data);
 
-    $cache->set($hash, $posts, CACHE_DURATION);
+    $cache->$hash = array($post, CACHE_DURATION);
     curl_close($ch);
 }
-echo $posts;
+echo $post;
