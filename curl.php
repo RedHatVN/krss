@@ -1,8 +1,10 @@
+<meta charset="utf-8"/>
 <?php
 define('APP_DIR', dirname(__FILE__) . DIRECTORY_SEPARATOR);
 define('CACHE_DIR', APP_DIR . '/cache');
 define('CACHE_DURATION', 7200);
 require_once(APP_DIR . '/libs/phpfastcache/phpfastcache.php');
+require_once(APP_DIR . '/libs/simple_html_dom.php');
 $url = 'http://afamily.vn/chuyen-la/sen-khong-lo-an-thit-xam-nhap-nuoc-anh-20140905031048188.chn';
 $cache_config = array(
     'storage' => 'files',
@@ -11,14 +13,6 @@ $cache_config = array(
 );
 phpFastCache::setup($cache_config);
 $cache = phpFastCache();
-
-//$products = $cache->my_products;
-//if($products == null) {
-//    $products = 'sieu';
-//    $cache->my_products = array($products, 600);
-//}
-//echo $products;
-
 $hash = md5($url);
 $file = CACHE_DIR . '/' . $hash . '.cache';
 $post = $cache->$hash;
@@ -44,4 +38,9 @@ if ($post == null) {
     $cache->$hash = array($post, CACHE_DURATION);
     curl_close($ch);
 }
-echo $post;
+$html = str_get_html($post);
+echo $title = $html->find('h1[class="d-title mgt5"]', 0)->plaintext;
+echo '<br />';
+echo $summary = $html->find('[class="sapo fl mgt10 mgb10"]', 0)->plaintext;
+echo '<br />';
+echo $description = $html->find('[class="detail_content fl mgt15"]',0)->innertext;

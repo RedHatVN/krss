@@ -23,28 +23,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="rss.php" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/rss.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="2" column="0" selection-start="30" selection-end="162" vertical-scroll-proportion="-1.3076923" vertical-offset="0" max-vertical-offset="646">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="curl.php" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/curl.php">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="46" column="10" selection-start="1488" selection-end="1488" vertical-scroll-proportion="0.8321678" vertical-offset="306" max-vertical-offset="884">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="post.php" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/post.php">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="1" column="0" selection-start="6" selection-end="261" vertical-scroll-proportion="-0.65384614" vertical-offset="0" max-vertical-offset="306">
+            <state line="45" column="82" selection-start="1679" selection-end="1679" vertical-scroll-proportion="0.8513986" vertical-offset="278" max-vertical-offset="867">
               <folding />
             </state>
           </provider>
@@ -258,7 +240,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/curl.php">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="46" column="10" selection-start="1488" selection-end="1488" vertical-scroll-proportion="0.8321678" vertical-offset="306" max-vertical-offset="884">
+        <state line="45" column="82" selection-start="1679" selection-end="1679" vertical-scroll-proportion="0.8513986" vertical-offset="278" max-vertical-offset="867">
           <folding />
         </state>
       </provider>
