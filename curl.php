@@ -141,111 +141,92 @@ $feed->init();
 $feed->handle_content_type();
 
 foreach ($feed->get_items() as $key => $item):
-    echo get_posts($item->get_permalink());
-    sleep(10);
+    echo httpGet($item->get_permalink());
 endforeach;
 
-function get_posts($url)
+function httpGet($url, $ttl = 86400)
 {
-    $hash = md5($url);
-    $file = CACHE_DIR . '/posts/' . $hash . '.cache';
-    $mtime = 0;
-    if (file_exists($file)) {
-        $mtime = filemtime($file);
-    }
-    $filetimecache = $mtime + CACHE_DURATION;
-    if ($filetimecache < time()) {
-        $ch = curl_init($url);
-        $curl_defaults = array(
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_HEADER => FALSE,
-            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103 Safari/537.36',
-            CURLOPT_FOLLOWLOCATION => 1,
-            CURLOPT_AUTOREFERER => 1,
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_MAXCONNECTS => 1,
-            CURLOPT_CONNECTTIMEOUT => 30,
-            CURLOPT_TIMEOUT => 60,
-            CURLOPT_VERBOSE => 0,
-            CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            CURLOPT_MAXREDIRS => 5,
-            CURLINFO_CONNECT_TIME => 30,
-            CURLINFO_PRETRANSFER_TIME => 60
-        );
-        curl_setopt_array($ch, $curl_defaults);
-        $data = curl_exec($ch);
-        curl_close($ch);
+    /* Change this or make it an option as appropriate. If you're
+     * getting urls that shouldn't be visible to the public, put the
+     * cache folder somewhere it can't be accessed from the web
+     */
+    $cache_path = dirname(__FILE__).'/cache/posts';
 
-        if ($data) {
-            file_put_contents($file, $data);
-        }
-    } else {
-        $data = file_get_contents($file);
+
+    /* Check the cache first - setting ttl to 0 overrides
+     * the check. I'm using crc32() to make URLs safe here; if you're
+     * fetching millions of URLs, it might not be different enough to
+     * avoid clashes. If you get collisions, use md5() or something,
+     * and change the sprintf() pattern.
+     */
+    $cache_file   = sprintf('%s/%08X.dat', $cache_path, crc32($url));
+    $cache_exists = is_readable($cache_file);
+
+    /* If the cache is newer than the Time To Live, return it
+     * instead of doing a new request. The default TTL is 1 day.
+     */
+    if ($ttl && $cache_exists &&
+        (filemtime($cache_file) > (time() - $ttl))
+    )
+    {
+        return file_get_contents($cache_file);
     }
-    //return $data;
+
+    /* Need to regenerate the cache. First thing to do here is update
+     * the modification time on the cache file so that no one else
+     * tries to update the cache while we're updating it.
+     */
+    touch($cache_file);
+    clearstatcache();
+
+
+    /* Set up the cURL pointer. It's important to set a User-Agent
+     * that's unique to you, and provides contact details in case your
+     * script is misbehaving and a server owner needs to contact you.
+     * More than that, it's just the polite thing to do.
+     */
+    $c = curl_init();
+    curl_setopt($c, CURLOPT_URL, $url);
+    curl_setopt($c, CURLOPT_TIMEOUT, 15);
+    curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($c, CURLOPT_USERAGENT,
+        'ExampleFetcher/0.9  (http://example.com/; bob@example.com)');
+
+
+    /* If we've got a cache, do the web a favour and make a
+     * conditional HTTP request. What this means is that if the
+     * server supports it, it will tell us if nothing has changed -
+     * this means we can reuse the cache for a while, and the
+     * request is returned faster.
+     */
+    if ($cache_exists) {
+        curl_setopt($c, CURLOPT_TIMECONDITION, CURL_TIMECOND_IFMODSINCE);
+        curl_setopt($c, CURLOPT_TIMEVALUE, filemtime($cache_file));
+    }
+
+
+    /* Make the request and check the result. */
+    $content = curl_exec($c);
+    $status = curl_getinfo($c, CURLINFO_HTTP_CODE);
+
+    // Document unmodified? Return the cache file
+    if ($cache_exists && ($status == 304)) {
+        return file_get_contents($cache_file);
+    }
+
+    /* You could be more forgiving of errors here. I've chosen to
+     * fail hard instead, because at least it'll be obvious when
+     * something goes wrong.
+     */
+    if ($status != 200) {
+        throw new Exception(sprintf('Unexpected HTTP return code %d', $status));
+    }
+
+
+    /* If everything is fine, save the new cache file, make sure
+     * it's world-readable, and writeable by the server
+     */
+    file_put_contents($cache_file, $content);
+    chmod($cache_file, 0644);
+    return $content;
 }
-
-//AFamily
-//'title' => $html->find('h1[class="d-title mgt5"]', 0)->plaintext,
-//'summary' => $html->find('[class="sapo fl mgt10 mgb10"]', 0)->plaintext,
-//'description' => $html->find('[class="sapo fl mgt10 mgb10"]', 0)->plaintext
-
-
-///**
-// * Get Post Detail
-// * @param $url
-// */
-//function get_post($url)
-//{
-//    $cache = phpFastCache();
-//    $hash = md5($url);
-//    $item = $cache->get($hash);
-//    if ($item == null) {
-//        $ch = curl_init($url);
-//        $curl_defaults = array(
-//            CURLOPT_RETURNTRANSFER => true,
-//            CURLOPT_HEADER => 0,
-//            CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103 Safari/537.36',
-//            CURLOPT_FOLLOWLOCATION => 1,
-//            CURLOPT_AUTOREFERER => 1,
-//            CURLOPT_RETURNTRANSFER => 1,
-//            CURLOPT_CONNECTTIMEOUT => 20,
-//            CURLOPT_TIMEOUT => 20,
-//            CURLOPT_VERBOSE => 0,
-//            CURLOPT_SSL_VERIFYHOST => 0,
-//            CURLOPT_SSL_VERIFYPEER => 0,
-//        );
-//        curl_setopt_array($ch, $curl_defaults);
-//        $item = curl_exec($ch);
-//        curl_close($ch);
-//        $cache->set($hash, $item, CACHE_DURATION);
-//    }
-//    return $item;
-//}
-
-//$caches = phpFastCache();
-//$html = str_get_html(get_post($item->get_permalink()));
-//$post = array(
-//    'title' => $html->find('[class="fon31 mt2"]', 0)->plaintext,
-//    'summary' => $html->find('[class="fon33 mt1"]', 0)->plaintext,
-//    'description' => strip_tags($html->find('[class="fon34 mt3 mr2 fon43"]', 0)->plaintext, '<img><br /><br><table><td><tr><th><tbody><thead><p><strong><em>')
-//);
-//$caches->set('sieu_' . $hash, $post, CACHE_DURATION);
-
-//function get_post($url)
-//{
-//    $cache = phpFastCache();
-//    $hash = md5($url);
-//    $item = $cache->get($hash);
-//    if ($item == null) {
-//        $html = file_get_html($url);
-//        $item = array(
-//            'title' => $html->find('[class="fon31 mt2"]', 0)->plaintext,
-//            'summary' => $html->find('[class="fon33 mt1"]', 0)->plaintext,
-//            'description' => $html->find('[class="fon34 mt3 mr2 fon43"]', 0)->innertext
-//        );
-//        $cache->set($hash, $item, CACHE_DURATION);
-//    }
-//    return $item;
-//}
