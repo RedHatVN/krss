@@ -65,3 +65,4 @@ cache/cache.storage.localhost/af/af5ace871e73460139d7482e68513ab5.txt
 *.spc
 cache/posts/079939cb09cc6fd3c3eff1466c910ff6.cache
 .idea/workspace.xml
+*.dat
